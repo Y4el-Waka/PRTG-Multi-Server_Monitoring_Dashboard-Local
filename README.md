@@ -1,4 +1,4 @@
-📊 Descripción del Proyecto (Versión Local)
+📊 Descripción general del Proyecto (Versión Local)
 
 Este proyecto es un Dashboard de Monitoreo Local para PRTG, diseñado para consolidar y visualizar en una sola interfaz el estado de cientos de sensores provenientes de múltiples servidores.
 
