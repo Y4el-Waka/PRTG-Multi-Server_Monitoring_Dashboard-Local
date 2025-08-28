@@ -23,8 +23,7 @@ DASHPRTG-LOCAL/
 │
 ├── docs/                                 # Documentación y recursos visuales
 │   ├── Dashboard-example.png
-│   ├── Diagrama de Procesos.png
-│   └── Guía de Instalación.md
+│   └── Diagrama de Procesos.png
 │
 ├── src/                                  # Código fuente principal
 │   ├── local/
