@@ -3,6 +3,8 @@
 Este proyecto permite visualizar de forma centralizada y en tiempo real el estado de múltiples sensores de PRTG desde un dashboard web local.
 El sistema recolecta información mediante la API de PRTG, la procesa en un script en Python y la presenta en un archivo HTML de manera sencilla y personalizable.
 
+![imgexaple.](/docs/Dashboard-example.png "Ejemplo de Dash")
+
 ## 🚀 Características
 
 Consulta de múltiples servidores PRTG mediante su API.
