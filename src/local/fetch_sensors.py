@@ -49,7 +49,7 @@ servers = [
         "password": "admin1234*"
     },
     {
-        "name": "PRTG MPLSL2L",
+        "name": "PRTG SUR",
         "url": "https://1.1.1.1:1234",
         "username": "admin",
         "password": "admin1234"
@@ -195,4 +195,5 @@ def main():
         print("\nMonitor detenido manualmente. guuddd baiiiii")
 
 if __name__ == "__main__":
+
     main()
