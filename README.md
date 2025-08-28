@@ -21,20 +21,20 @@ Código modular y fácil de adaptar a tus necesidades.
 ```
 DASHPRTG-LOCAL/
 │
-├── docs/                        # Documentación y recursos visuales
+├── docs/                                 # Documentación y recursos visuales
 │   ├── Dashboard-example.png
 │   ├── Diagrama de Procesos.png
 │   └── Guía de Instalación.md
 │
-├── src/                         # Código fuente principal
+├── src/                                  # Código fuente principal
 │   ├── local/
-│   │   └── sensors.json   # Salida generada por el script
+│   │   └── sensors.json                  # Salida generada por el script
 │   │   └── fetch_sensors.py              # Script que consulta la API y genera el JSON
 │   │
 │   └── web/
-│       └── ddashboard.html           # Dashboard local que muestra los resultados
+│       └── dashboard.html               # Dashboard local que muestra los resultados
 │
-└── README.md                   # Documentación principal del repositorio
+└── README.md                             # Documentación principal del repositorio
 ```
 
 ### 🛠️ Instalación y Uso
@@ -45,16 +45,16 @@ git clone https://github.com/Y4el-Waka/PRTG-Multi-Server_Monitoring_Dashboard-Lo
 cd DASHPRTG-LOCAL/src/local
 ```
 
-#### Edita el archivo script-prtg.py y coloca tus credenciales de PRTG:
+#### Edita el archivo fecth_sensors.py y coloca tus credenciales de PRTG:
 ```
 USERNAME = "tu_usuario"
 PASSWORD = "tu_password"
 PRTG_SERVER = "https://tuservidorprtg"
 ```
 
-#### Ejecuta el script para generar el archivo estado_sensores_prtg.json:
+#### Ejecuta el script para generar el archivo sensors.json:
 ```
-python script-prtg.py
+python fetch_sensors.py
 ```
 
 #### Abre el dashboard en tu navegador:
