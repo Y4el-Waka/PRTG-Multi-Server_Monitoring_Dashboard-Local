@@ -1,0 +1,60 @@
+{
+    "ultima_actualizacion": "2025-08-26 02:19:26",
+    "sensores": [
+        {
+            "device": "ejemplo up",
+            "sensor": "Ping",
+            "status": "Up",
+            "status_code": 3,
+            "lastvalue": "30 mseg",
+            "grupo": "PRTG CENTRAL",
+            "timestamp": "2025-08-26 02:19:26",
+            "message": "<div class=\"status\">OK<div class=\"moreicon\"></div></div>"
+        },
+         {
+            "device": "ejemplo down",
+            "sensor": "Ping",
+            "status": "Down",
+            "status_code": 3,
+            "lastvalue": "0 mseg",
+            "grupo": "PRTG SERVERS",
+            "timestamp": "2025-08-26 02:19:26",
+            "message": "<div class=\"status\">Request timed out (error ICMP # 11010)<div class=\"moreicon\"></div></div>"
+        },
+         {
+            "device": "Ejemplo Pausado",
+            "sensor": "Ping",
+            "status": "Paused Until",
+            "status_code": 3,
+            "lastvalue": "30 mseg",
+            "grupo": "PRTG EJEMPLO",
+            "timestamp": "2025-08-26 02:19:26",
+             "message": "<div class=\"status\">Pausado por Administrador de sistema PRTG el 13/08/2025 a las 09:04:31 p. m. [GMT-0600] hasta las 31/08/2025 09:05:00 p. m. [GMT-0600]<div class=\"moreicon\"></div></div>"
+        },
+        {
+            "device": "Ejemplo DA",
+            "sensor": "Ping",
+            "status": "Down Acknowledged",
+            "status_code": 13,
+            "lastvalue": "",
+            "grupo": "PRTG EJEMPLO2",
+            "timestamp": "2025-08-28 02:02:55",
+            "message": "<div class=\"status\">Confirmado por Administrador de sistema PRTG el 24/07/2025 a las 12:17:27 p. m. [GMT-0600]: Request timed out (error ICMP # 11010)<div class=\"moreicon\"></div></div>"
+        },
+         {
+            "device": "Ejemplo WG",
+            "sensor": "Ping",
+            "status": "Warning",
+            "status_code": 13,
+            "lastvalue": "",
+            "grupo": "PRTG EJEMPLO3",
+            "timestamp": "2025-08-28 02:02:55",
+            "message": "<div class=\"status\">Confirmado por Administrador de sistema PRTG el 24/07/2025 a las 12:17:27 p. m. [GMT-0600]: Request timed out (error ICMP # 11010)<div class=\"moreicon\"></div></div>"
+        }
+    ],
+    "logs": {
+        "last_up": [],
+        "last_down": []
+    },
+    "server_stats": {}
+}

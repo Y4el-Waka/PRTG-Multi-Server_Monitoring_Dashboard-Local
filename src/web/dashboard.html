@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRTG Network Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // Extendiendo la paleta de colores para los nuevos estados de PRTG
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        prtg: {
+                            up: '#7ad03a', //verde para Up
+                            down: '#dd3d36', //Rojo para Down
+                            warning: '#ffb700', // Naranja/amarillo para advertencias
+                            paused: '#296E8A', // Azul oscuro para pausados
+                            acknowledged: '#7e57c2', // Morado para  fallos reconocidos
+                            unknown: '#90a4ae' // Gris para estados desconocidos o inusuales
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; } /* Una fuente más moderna */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        
+        .sensor-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .status-badge {
+            min-width: 120px; /* Ancho mínimo para que los servicios largos no se corten */
+            text-align: center;
+        }
+        .log-entry:hover {
+             background-color: #f9fafb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-network-wired mr-3 text-blue-600"></i>
+                        PRTG Network Dashboard
+                    </h1>
+                    <p class="text-gray-500 mt-1">Monitoreo de Servidores PRTG</p>
+                </div>
+                <div>
+                    <div class="bg-white rounded-lg shadow-sm px-4 py-2 flex items-center text-sm">
+                        <i class="fas fa-clock text-gray-400 mr-2.5"></i>
+                        <span id="last-updated" class="font-medium text-gray-700">Cargando...</span>
+                    </div>
+                    <p class="text-right text-xs text-gray-400 mt-1">by: Y4el-Waka</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Sensores</p>
+                    <h3 id="total-sensors" class="text-2xl font-bold text-gray-800">--</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full"><i class="fas fa-layer-group text-blue-500 text-xl"></i></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Up</p>
+                    <h3 id="up-sensors" class="text-2xl font-bold text-prtg-up">--</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full"><i class="fas fa-check-circle text-prtg-up text-xl"></i></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Down</p>
+                    <h3 id="down-sensors" class="text-2xl font-bold text-prtg-down">--</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full"><i class="fas fa-times-circle text-prtg-down text-xl"></i></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Warning</p>
+                    <h3 id="warning-sensors" class="text-2xl font-bold text-prtg-warning">--</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full"><i class="fas fa-exclamation-triangle text-prtg-warning text-xl"></i></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Pausados</p>
+                    <h3 id="paused-sensors" class="text-2xl font-bold text-prtg-paused">--</h3>
+                </div>
+                <div class="bg-sky-100 p-3 rounded-full"><i class="fas fa-pause-circle text-prtg-paused text-xl"></i></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">fConfirmado</p>
+                    <h3 id="acknowledged-sensors" class="text-2xl font-bold text-prtg-acknowledged">--</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full"><i class="fas fa-user-check text-prtg-acknowledged text-xl"></i></div>
+            </div>
+        </div>
+
+        <div class="mb-6 bg-white rounded-lg shadow-sm p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="lg:col-span-2">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+                    <div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400"></i></div><input type="text" id="search" class="pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 border" placeholder="Buscar por sensor o dispositivo..."></div>
+                </div>
+                <div>
+                    <label for="status-filter" class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                    <select id="status-filter" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 border">
+                        <option value="all">Todos los Estados</option>
+                        <option value="Up">Up</option>
+                        <option value="Down">Down (Todos)</option>
+                        <option value="Down Acknowledged">Down Acknowledged</option>
+                        <option value="Warning">Warning</option>
+                        <option value="Paused">Paused (Todos)</option>
+                        <option value="Unknown">Unknown / Otros</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="server-filter" class="block text-sm font-medium text-gray-700 mb-1">Servidor</label>
+                    <select id="server-filter" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3 border"><option value="all">Todos los Servidores</option></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-6 px-6" aria-label="Tabs">
+                    <button id="tab-sensors" class="tab-button active" onclick="setView('sensors')">
+                        <i class="fas fa-th-large mr-2"></i>Sensores
+                    </button>
+                    <button id="tab-logs" class="tab-button" onclick="setView('logs')">
+                        <i class="fas fa-history mr-2"></i>Logs de Cambios
+                    </button>
+                </nav>
+            </div>
+
+            <div id="loading-state" class="flex flex-col items-center justify-center py-20"><div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div><p class="text-gray-600">Cargando datos de sensores...</p></div>
+            <div id="error-state" class="hidden text-center py-20"><i class="fas fa-exclamation-triangle text-red-400 text-5xl mb-4"></i><h3 class="text-xl font-medium text-gray-700">Fallo al cargar los datos</h3><p class="text-gray-500 mt-1" id="error-message">Por favor, inténtalo de nuevo.</p><button id="retry-btn" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center mx-auto transition-colors"><i class="fas fa-sync-alt mr-2"></i>Reintentar</button></div>
+
+            <div id="view-content">
+                <div id="sensor-grid-view" class="p-4">
+                    <div id="sensor-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+                    <div id="no-results" class="hidden text-center py-20"><i class="fas fa-search text-gray-400 text-5xl mb-4"></i><h3 class="text-xl font-medium text-gray-700">No se encontraron sensores</h3><p class="text-gray-500 mt-1">Prueba a cambiar los filtros de búsqueda</p></div>
+                </div>
+                <div id="logs-view" class="hidden p-4">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><h2 class="text-lg font-semibold border-b pb-2 mb-4 flex items-center"><i class="fas fa-arrow-up text-prtg-up mr-2"></i>Sensores Recuperados (Up)</h2><div class="space-y-2" id="up-logs-container"></div></div>
+                        <div><h2 class="text-lg font-semibold border-b pb-2 mb-4 flex items-center"><i class="fas fa-arrow-down text-prtg-down mr-2"></i>Sensores con Fallo (Down)</h2><div class="space-y-2" id="down-logs-container"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <script>
+    let sensorData = null;
+    let refreshInterval;
+
+    // --- Configuración de Estilos para cada Estado de PRTG ---
+    const statusConfig = {
+        'Up': { color: 'green', icon: 'fa-check-circle', textColor: 'text-prtg-up', borderColor: 'border-prtg-up', bgColor: 'bg-green-100' },
+        'Down': { color: 'red', icon: 'fa-times-circle', textColor: 'text-prtg-down', borderColor: 'border-prtg-down', bgColor: 'bg-red-100' },
+        'Down Partial': { color: 'red', icon: 'fa-exclamation-circle', textColor: 'text-prtg-down', borderColor: 'border-prtg-down', bgColor: 'bg-red-100' },
+        'Down Acknowledged': { color: 'purple', icon: 'fa-user-check', textColor: 'text-prtg-acknowledged', borderColor: 'border-prtg-acknowledged', bgColor: 'bg-purple-100' },
+        'Warning': { color: 'yellow', icon: 'fa-exclamation-triangle', textColor: 'text-prtg-warning', borderColor: 'border-prtg-warning', bgColor: 'bg-yellow-100' },
+        'Paused by Schedule': { color: 'sky', icon: 'fa-pause-circle', textColor: 'text-prtg-paused', borderColor: 'border-prtg-paused', bgColor: 'bg-sky-100' },
+        'Paused by Dependency': { color: 'sky', icon: 'fa-pause-circle', textColor: 'text-prtg-paused', borderColor: 'border-prtg-paused', bgColor: 'bg-sky-100' },
+        'Paused Until': { color: 'sky', icon: 'fa-calendar-alt', textColor: 'text-prtg-paused', borderColor: 'border-prtg-paused', bgColor: 'bg-sky-100' },
+        'Unknown': { color: 'gray', icon: 'fa-question-circle', textColor: 'text-prtg-unknown', borderColor: 'border-prtg-unknown', bgColor: 'bg-gray-100' },
+        'Unusual': { color: 'gray', icon: 'fa-bolt', textColor: 'text-prtg-unknown', borderColor: 'border-prtg-unknown', bgColor: 'bg-gray-100' },
+        'Scanning': { color: 'blue', icon: 'fa-spinner fa-spin', textColor: 'text-blue-500', borderColor: 'border-blue-500', bgColor: 'bg-blue-100' },
+        'default': { color: 'gray', icon: 'fa-question-circle', textColor: 'text-prtg-unknown', borderColor: 'border-prtg-unknown', bgColor: 'bg-gray-100' }
+    };
+
+    // --- Lógica Principal ---
+    
+    async function loadData() {
+        try {
+            showLoading();
+            const response = await fetch(`../local/sensors.json?t=${Date.now()}`);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            sensorData = await response.json();
+            renderAll();
+            populateServerFilter();
+            startAutoRefresh();
+        } catch (error) {
+            console.error('Error al cargar datos:', error);
+            showError(`No se pudo cargar el archivo de datos. ${error.message}`);
+        }
+    }
+
+    function renderAll() {
+        if (!sensorData || !sensorData.sensores) {
+            showError("El archivo de datos no contiene sensores.");
+            return;
+        }
+        hideLoading();
+        updateCounters();
+        renderSensorsView();
+        renderLogView(); // Renderizar logs siempre para tenerlos listos
+    }
+
+    function showLoading() {
+        document.getElementById('loading-state').classList.remove('hidden');
+        document.getElementById('view-content').classList.add('hidden');
+        document.getElementById('error-state').classList.add('hidden');
+    }
+
+    function hideLoading() {
+        document.getElementById('loading-state').classList.add('hidden');
+        document.getElementById('view-content').classList.remove('hidden');
+        document.getElementById('error-state').classList.add('hidden');
+    }
+
+    function renderSensorsView() {
+        document.getElementById('last-updated').textContent = 
+            `Actualizado: ${formatTimestamp(sensorData.ultima_actualizacion) || 'N/A'}`;
+
+        const searchTerm = document.getElementById('search').value.toLowerCase();
+        const statusFilter = document.getElementById('status-filter').value;
+        const serverFilter = document.getElementById('server-filter').value;
+
+        const filteredSensors = sensorData.sensores.filter(sensor => {
+            const status = sensor.status || 'Unknown';
+            const matchesSearch = sensor.sensor.toLowerCase().includes(searchTerm) || sensor.device.toLowerCase().includes(searchTerm);
+            const matchesServer = serverFilter === 'all' || sensor.grupo === serverFilter;
+            
+            let matchesStatus = false;
+            if (statusFilter === 'all') {
+                matchesStatus = true;
+            } else if (statusFilter === 'Down') {
+                matchesStatus = status.toLowerCase().includes('down') && !status.toLowerCase().includes('acknowledged');
+            } else if (statusFilter === 'Paused') {
+                matchesStatus = status.toLowerCase().includes('paused');
+            } else if (statusFilter === 'Unknown') {
+                 matchesStatus = ['Unknown', 'Unusual', 'Scanning', 'None'].includes(status);
+            } else {
+                matchesStatus = status === statusFilter;
+            }
+            
+            return matchesSearch && matchesStatus && matchesServer;
+        });
+
+        const sensorGrid = document.getElementById('sensor-grid');
+        sensorGrid.innerHTML = '';
+
+        if (filteredSensors.length === 0) {
+            document.getElementById('no-results').classList.remove('hidden');
+            sensorGrid.classList.add('hidden');
+            return;
+        }
+
+        document.getElementById('no-results').classList.add('hidden');
+        sensorGrid.classList.remove('hidden');
+
+        const priority = { 'Down': 0, 'Down Partial': 1, 'Warning': 2, 'Up': 3, 'Down Acknowledged': 4, 'Paused by Schedule': 5, 'Paused by Dependency': 6, 'default': 10 };
+        filteredSensors.sort((a, b) => (priority[a.status] ?? priority.default) - (priority[b.status] ?? priority.default));
+
+        filteredSensors.forEach(sensor => {
+            const status = sensor.status || 'Unknown';
+            const statusInfo = statusConfig[status] || statusConfig.default;
+            
+            let lastValueContent;
+           if (status === 'Paused Until') {
+                // Extrae la fecha del mensaje, eliminando el texto sobrante.
+                const resumeTime = sensor.message.replace("Paused until ", "").trim();
+                lastValueContent = `
+                    <div class="text-xs text-gray-600 flex items-center">
+                       <i class="fas fa-calendar-check w-4 text-center mr-1.5 text-prtg-paused"></i>
+                       <span>Reanuda: <strong class="font-medium">${resumeTime || 'N/A'}</strong></span>
+                    </div>
+                `;
+            } else {
+                lastValueContent = `
+                    <p class="text-xs text-gray-500">Último Valor</p>
+                    <p class="font-semibold text-sm ${statusInfo.textColor}">${sensor.lastvalue}</p>
+                `;
+            }
+            
+            const card = document.createElement('div');
+            card.className = `sensor-card bg-white rounded-lg shadow-sm p-4 transition-all duration-200 border-l-4 ${statusInfo.borderColor} min-h-[160px] flex flex-col justify-between`;
+            card.innerHTML = `
+                <div>
+                    <div class="flex justify-between items-start mb-3 gap-2">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-medium text-gray-800 break-words" title="${sensor.device}">${sensor.device}</h3>
+                            <p class="text-sm text-gray-500 break-words" title="${sensor.sensor}">${sensor.sensor}</p>
+                            <p class="text-xs text-gray-400 italic mt-1">${sensor.grupo}</p>
+                        </div>
+                        <span class="status-badge ${statusInfo.bgColor} ${statusInfo.textColor} text-xs font-semibold px-2 py-1 rounded-full flex items-center justify-center ml-2 flex-shrink-0">
+                            <i class="fas ${statusInfo.icon} mr-1.5"></i>
+                            <span>${status}</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="border-t pt-2 mt-auto">
+                    ${lastValueContent}
+                </div>
+            `;
+            sensorGrid.appendChild(card);
+        });
+    }
+
+    function renderLogView() {
+        const upContainer = document.getElementById('up-logs-container');
+        const downContainer = document.getElementById('down-logs-container');
+        upContainer.innerHTML = '';
+        downContainer.innerHTML = '';
+
+        const createLogEntry = (log, type) => {
+            const statusInfo = type === 'Up' ? statusConfig.Up : statusConfig.Down;
+            const entry = document.createElement('div');
+            entry.className = `log-entry border rounded-md p-3 mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between`;
+            entry.innerHTML = `
+                <div class="flex-1 min-w-0 mb-2 sm:mb-0">
+                    <div class="font-medium truncate" title="${log.sensor}">${log.sensor}</div>
+                    <div class="text-sm text-gray-500 truncate">${log.device} <span class="text-xs">(${log.grupo})</span></div>
+                </div>
+                <div class="text-xs text-gray-600 flex flex-col sm:items-end">
+                     <span class="font-mono mb-1">${formatTimestamp(log.timestamp)}</span>
+                     <span class="bg-gray-100 px-2 py-0.5 rounded">${log.previous_status || '?'} → <strong class="${statusInfo.textColor}">${log.new_status}</strong></span>
+                </div>`;
+            return entry;
+        };
+
+        const logs = sensorData.logs || {};
+        if (logs.last_up && logs.last_up.length > 0) {
+            logs.last_up.forEach(log => upContainer.appendChild(createLogEntry(log, 'Up')));
+        } else {
+            upContainer.innerHTML = `<p class="text-center text-gray-400 py-4">No hay eventos de recuperación recientes.</p>`;
+        }
+        
+        if (logs.last_down && logs.last_down.length > 0) {
+            logs.last_down.forEach(log => downContainer.appendChild(createLogEntry(log, 'Down')));
+        } else {
+            downContainer.innerHTML = `<p class="text-center text-gray-400 py-4">No hay eventos de fallo recientes.</p>`;
+        }
+    }
+    
+    function updateCounters() {
+        const sensors = sensorData.sensores;
+        document.getElementById('total-sensors').textContent = sensors.length;
+        document.getElementById('up-sensors').textContent = sensors.filter(s => s.status === 'Up').length;
+        document.getElementById('down-sensors').textContent = sensors.filter(s => s.status && s.status.toLowerCase().includes('down') && !s.status.toLowerCase().includes('acknowledged')).length;
+        document.getElementById('warning-sensors').textContent = sensors.filter(s => s.status === 'Warning').length;
+        document.getElementById('paused-sensors').textContent = sensors.filter(s => s.status && s.status.toLowerCase().includes('paused')).length;
+        document.getElementById('acknowledged-sensors').textContent = sensors.filter(s => s.status === 'Down Acknowledged').length;
+    }
+
+    function populateServerFilter() {
+        const serverFilter = document.getElementById('server-filter');
+        const currentServers = new Set(Array.from(serverFilter.options).map(o => o.value));
+        const newServers = new Set(sensorData.sensores.map(s => s.grupo));
+        
+        if (JSON.stringify([...currentServers]) === JSON.stringify([...newServers])) return;
+
+        while (serverFilter.options.length > 1) { serverFilter.remove(1); }
+        newServers.forEach(server => {
+            const option = document.createElement('option');
+            option.value = server;
+            option.textContent = server;
+            serverFilter.appendChild(option);
+        });
+    }
+
+    function showError(message) {
+        document.getElementById('loading-state').classList.add('hidden');
+        document.getElementById('view-content').classList.add('hidden');
+        document.getElementById('error-message').textContent = message;
+        document.getElementById('error-state').classList.remove('hidden');
+    }
+
+    async function checkForUpdates() {
+        try {
+            const response = await fetch(`estado_sensores_prtg.json?t=${Date.now()}`);
+            if (!response.ok) return;
+            const newData = await response.json();
+            if (newData.ultima_actualizacion !== sensorData.ultima_actualizacion) {
+                sensorData = newData;
+                renderAll();
+            }
+        } catch (error) {
+            console.warn("Error al verificar actualizaciones:", error);
+        }
+    }
+
+    function startAutoRefresh() {
+        if (refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = setInterval(checkForUpdates, 30000); // Chequea cada 30 segundoteesss
+    }
+    
+    function setView(viewName) {
+        document.getElementById('sensor-grid-view').classList.toggle('hidden', viewName !== 'sensors');
+        document.getElementById('logs-view').classList.toggle('hidden', viewName !== 'logs');
+        document.getElementById('tab-sensors').classList.toggle('active', viewName === 'sensors');
+        document.getElementById('tab-logs').classList.toggle('active', viewName === 'logs');
+    }
+    
+    function formatTimestamp(ts) {
+        if (!ts) return null;
+        try {
+            return new Date(ts).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'medium' });
+        } catch (e) {
+            return ts;
+        }
+    }
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('retry-btn').addEventListener('click', loadData);
+        ['search', 'status-filter', 'server-filter'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => sensorData && renderAll());
+            document.getElementById(id).addEventListener('change', () => sensorData && renderAll());
+        });
+        loadData();
+    });
+    </script>
+
+
+<style>
+/* Estilos adicionales para los tabs */
+.tab-button {
+    padding: 1rem;
+    border-bottom: 3px solid transparent;
+    font-weight: 500;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+.tab-button:hover {
+    color: #3b82f6;
+}
+.tab-button.active {
+    border-bottom-color: #3b82f6;
+    color: #3b82f6;
+}
+</style>
+</body>
+</html>
